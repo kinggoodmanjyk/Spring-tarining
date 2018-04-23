@@ -10,13 +10,4 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @ContextConfiguration(classes = DatabaseConfig.class)
 public class propertyTest {
 	
-	@Autowired
-	private Database database;
-	
-	@Test
-	public void testPropertyTest(){
-		System.out.println(database.getPassword());
-		System.out.println(database.getUrl());
-		System.out.println(database.getUser());
-	}
 }
