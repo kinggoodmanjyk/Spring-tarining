@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration
+  PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+  "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+<generatorConfiguration>
+	<!-- 属性配置 -->
+	<properties resource="dev/generator/generator.properties"></properties>
+
+	<!-- flat 该模型为每一张表只生成一个实体类。这个实体类包含表中的所有字段。 -->
+	<context id="MysqlContext" targetRuntime="MyBatis3"
+		defaultModelType="flat">
+
+		<!-- 数据库连接 -->
+		<jdbcConnection driverClass="${generator.jdbc.driver}"
+			connectionURL="${generator.jdbc.url}" userId="${generator.jdbc.username}"
+			password="${generator.jdbc.password}" />
+
+		<javaTypeResolver>
+			<property name="forceBigDecimals" value="false" />
+		</javaTypeResolver>
+
+		<!-- model生成 -->
+		<javaModelGenerator targetPackage="dao.model"
+			targetProject="D:\DesignPatterns\spring-boot-training\src\main\web">
+			<property name="enableSubPackages" value="true" />
+			<property name="trimStrings" value="true" />
+		</javaModelGenerator>
+
+		<sqlMapGenerator targetPackage="dao.mapper"
+			targetProject="D:\DesignPatterns\spring-boot-training\src\main\web">
+			<property name="enableSubPackages" value="true" />
+		</sqlMapGenerator>
+
+		<javaClientGenerator type="XMLMAPPER"
+			targetPackage="dao.mapper" targetProject="D:\DesignPatterns\spring-boot-training\src\main\web">
+			<property name="enableSubPackages" value="true" />
+		</javaClientGenerator>
+
+		<!-- 需要映射的表 -->
+		<table tableName="organization" domainObjectName="organization"></table>
+		<table tableName="resource" domainObjectName="resource"></table>
+		<table tableName="role" domainObjectName="role"></table>
+		<table tableName="role_resource" domainObjectName="role_resource"></table>
+		<table tableName="sys_log" domainObjectName="sysLog"></table>
+		<table tableName="user" domainObjectName="user"></table>
+		<table tableName="user_role" domainObjectName="userRole"></table>
+		<!-- 可以使用sql通配符匹配 -->
+	</context>
+</generatorConfiguration>
+	
+	
+
