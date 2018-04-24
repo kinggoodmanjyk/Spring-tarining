@@ -5,18 +5,20 @@ import java.sql.SQLException;
 import javax.sql.DataSource;
 
 import org.mybatis.spring.SqlSessionFactoryBean;
+import org.mybatis.spring.SqlSessionTemplate;
 import org.mybatis.spring.mapper.MapperScannerConfigurer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
+import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
 import com.alibaba.druid.pool.DruidDataSource;
 
 @Configuration
-@PropertySource(value = "classpath:/dev/application.properties")
+@PropertySource(value = "classpath:/application.properties")
 public class DatabaseConfig {
 
 	@Autowired
@@ -52,12 +54,21 @@ public class DatabaseConfig {
 	}
 
 	@Bean(name = "sqlSessionFactory")
-	public SqlSessionFactoryBean sqlSessionFactory() throws Exception {
+	public SqlSessionFactoryBean getSqlSessionFactoryBean() throws Exception {
 		SqlSessionFactoryBean sessionFactory = new SqlSessionFactoryBean();
-		sessionFactory.setConfigLocation(new PathMatchingResourcePatternResolver().getResource("classpath*:h8h/**/sql-map-config.xml"));
+		sessionFactory.setConfigLocation(new PathMatchingResourcePatternResolver().getResource("classpath:mybaits-config.xml"));
+		sessionFactory.setMapperLocations(new PathMatchingResourcePatternResolver().getResources("classpath:dao/mapper/**.xml"));
 		sessionFactory.setDataSource(getDataSource());
 		return sessionFactory;
 	}
+	
+	@Bean
+	public SqlSessionTemplate sqlSessionTemplate() throws Exception{
+		SqlSessionFactoryBean factoryBean  = getSqlSessionFactoryBean();
+		SqlSessionTemplate sqlSessionTemplate = new SqlSessionTemplate(factoryBean.getObject());
+		return sqlSessionTemplate;
+	}
+	
 	
 //	@Bean(name = "sqlClient")
 //	public MapperScannerConfigurer mapperScannerConfigurer() throws Exception{
