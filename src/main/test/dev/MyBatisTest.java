@@ -15,9 +15,9 @@ import dao.model.Country;
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = DatabaseConfig.class)
 public class MyBatisTest {
-
-	@Autowired
-	private SqlSessionTemplate sqlSessionTemplate;
+//
+//	@Autowired
+//	private SqlSessionTemplate sqlSessionTemplate;
 
 	@Autowired
 	private CountryMapper countryMapper;

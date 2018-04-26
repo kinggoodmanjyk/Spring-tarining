@@ -2,34 +2,37 @@ package dev;
 
 import java.sql.SQLException;
 
-import javax.sql.DataSource;
 
 import org.mybatis.spring.SqlSessionFactoryBean;
-import org.mybatis.spring.SqlSessionTemplate;
 import org.mybatis.spring.mapper.MapperScannerConfigurer;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
-import org.springframework.core.env.Environment;
-import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
+
+import redis.clients.jedis.JedisPoolConfig;
 
 import com.alibaba.druid.pool.DruidDataSource;
 
 @Configuration
-@PropertySource(value = "classpath:/application.properties")
+// @PropertySource(value = "classpath:/application.properties")
 public class DatabaseConfig {
 
-	@Autowired
-	Environment env;
+	// @Autowired
+	// Environment env;
 
+	// ------------------------------------DateSource-------------------------------
 	@Bean
 	public DruidDataSource getDataSource() throws SQLException {
+		System.out.println("getDataSource");
 		DruidDataSource ds = new DruidDataSource();
-		ds.setUrl(env.getProperty("db.master.url"));
-		ds.setUsername(env.getProperty("db.master.user"));
-		ds.setPassword(env.getProperty("db.master.password"));
+		ds.setUrl("jdbc:mysql://127.0.0.1:3306/go?useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=CONVERT_TO_NULL&serverTimezone=GMT%2B8&transformedBitIsBoolean=true&useSSL=false");
+		ds.setUsername("root");
+		ds.setPassword("64388515");
 
 		// 配置连接池初始化
 		ds.setInitialSize(1);// 初始大小
@@ -53,26 +56,97 @@ public class DatabaseConfig {
 		return ds;
 	}
 
+	// ------------------------------------Mybaties-------------------------------
 	@Bean(name = "sqlSessionFactory")
 	public SqlSessionFactoryBean getSqlSessionFactoryBean() throws Exception {
+		System.out.println("getSqlSessionFactoryBean");
 		SqlSessionFactoryBean sessionFactory = new SqlSessionFactoryBean();
-		sessionFactory.setConfigLocation(new PathMatchingResourcePatternResolver().getResource("classpath:mybaits-config.xml"));
-		sessionFactory.setMapperLocations(new PathMatchingResourcePatternResolver().getResources("classpath:dao/mapper/**.xml"));
+		sessionFactory
+				.setConfigLocation(new PathMatchingResourcePatternResolver()
+						.getResource("classpath:mybaits-config.xml"));
+		sessionFactory
+				.setMapperLocations(new PathMatchingResourcePatternResolver()
+						.getResources("classpath:dao/mapper/**.xml"));
 		sessionFactory.setDataSource(getDataSource());
 		return sessionFactory;
 	}
+
+	// @Bean(name = "sqlSessionTemplate")
+	// public SqlSessionTemplate sqlSessionTemplate() throws Exception{
+	// SqlSessionFactoryBean factoryBean = getSqlSessionFactoryBean();
+	// SqlSessionTemplate sqlSessionTemplate = new
+	// SqlSessionTemplate(factoryBean.getObject());
+	// return sqlSessionTemplate;
+	// }
+
+	@Bean
+	public MapperScannerConfigurer mapperScannerConfigurer() {
+		MapperScannerConfigurer msc = new MapperScannerConfigurer();
+		msc.setBasePackage("dao");
+		msc.setSqlSessionFactoryBeanName("sqlSessionFactory");
+		return msc;
+	}
+
+	// ------------------------------------Redis-------------------------------
+
+//	@Bean
+//	public JedisClientConfiguration getJedisClientConfiguration() {
+//		JedisPoolingClientConfigurationBuilder JedisPoolingClientConfigurationBuilder = (JedisPoolingClientConfigurationBuilder) JedisClientConfiguration
+//				.builder();
+//		GenericObjectPoolConfig GenericObjectPoolConfig = new GenericObjectPoolConfig();
+//		GenericObjectPoolConfig.setMaxIdle(1000);
+//		GenericObjectPoolConfig.setMaxTotal(100);
+//		GenericObjectPoolConfig.setMinIdle(100);
+//		return JedisPoolingClientConfigurationBuilder.poolConfig(
+//				GenericObjectPoolConfig).build();
+//	}
+
+//	@Bean
+//	public RedisConnectionFactory getRedisConnectionFactory() {
+//		RedisStandaloneConfiguration standaloneConfig = new RedisStandaloneConfiguration();
+//		standaloneConfig.setHostName("47.98.189.17");
+//		standaloneConfig.setPort(6379);
+//		return new JedisConnectionFactory(standaloneConfig,
+//				getJedisClientConfiguration());
+//	}
 	
 	@Bean
-	public SqlSessionTemplate sqlSessionTemplate() throws Exception{
-		SqlSessionFactoryBean factoryBean  = getSqlSessionFactoryBean();
-		SqlSessionTemplate sqlSessionTemplate = new SqlSessionTemplate(factoryBean.getObject());
-		return sqlSessionTemplate;
+	public JedisPoolConfig getJedisPoolConfig(){
+		JedisPoolConfig jedisPoolConfig = new JedisPoolConfig();
+		jedisPoolConfig.setMaxIdle(1000);
+		jedisPoolConfig.setMaxTotal(100);
+		jedisPoolConfig.setMinIdle(100);
+		return jedisPoolConfig;
 	}
 	
-	
-//	@Bean(name = "sqlClient")
-//	public MapperScannerConfigurer mapperScannerConfigurer() throws Exception{
-//		MapperScannerConfigurer msc = new MapperScannerConfigurer();
-//		msc.set
-//	}
+	@Bean
+	public JedisConnectionFactory getJedisConnectionFactory() {
+		JedisConnectionFactory jedisConnectionFactory = new JedisConnectionFactory();
+		jedisConnectionFactory.setHostName("47.98.189.17");
+		jedisConnectionFactory.setPort(6379);
+		jedisConnectionFactory.setPoolConfig(getJedisPoolConfig());
+		jedisConnectionFactory.setUsePool(true);
+//		jedisConnectionFactory.afterPropertiesSet(); //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		jedisConnectionFactory.setUseSsl(true);
+		return jedisConnectionFactory;
+	}
+
+	@Bean(name = "redisTemplate")
+	public RedisTemplate<String, Object> getRedisTemplate() {
+		RedisTemplate<String, Object> redisTemplate = new RedisTemplate<String, Object>();
+		redisTemplate.setKeySerializer(new StringRedisSerializer());
+		redisTemplate.setValueSerializer(new JdkSerializationRedisSerializer());
+		redisTemplate.setHashKeySerializer(new StringRedisSerializer());
+		redisTemplate.setHashValueSerializer(new JdkSerializationRedisSerializer());
+		redisTemplate.setConnectionFactory(getJedisConnectionFactory());
+		return redisTemplate;
+	}
+
+	@Bean(name = "stringRedisTemplate")
+	public StringRedisTemplate getStringRedisTemplate() {
+		StringRedisTemplate stringRedisTemplate = new StringRedisTemplate();
+		stringRedisTemplate.setConnectionFactory(getJedisConnectionFactory());
+		return stringRedisTemplate;
+	}
+
 }
